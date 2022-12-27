@@ -1,0 +1,168 @@
+# -*- coding: utf-8 -*-
+"""
+Numerical calculation of rocket trajectory with air resistance.
+Handout for the pre-work assignments to cycle 3 of Fly a Rocket!
+
+Created on Mon 07 Nov 2022 at 09:20:21.
+Last modified [dd.mm.yyyy]: 18.11.2022
+@author: bjarne.ådnanes.bergtun
+"""
+
+import numpy as np # maths
+import matplotlib.pyplot as plt # plotting
+
+#%matplotlib inline # Uncomment if using Jupyter!
+
+
+# ========================= Constants & parameters ========================== #
+
+# Constants
+g_0 = 9.81				# gravitational acceleration [m/s^2]
+rho_0 = 1.225			# air density at sea level [kg/m^3]
+H = 8500				# scale height [m]
+c_D = 				# drag coefficient for the rocket [-]
+A = 				# rocket body frontal area [m^2]
+m_w = 				# “wet” mass of the rocket [kg]
+m_p = 				# propellant mass [kg]
+T = 			# average rocket engine thrust [N]
+t_burn = 			# burn time [s]
+
+# Simulation parameters
+dt = 0.001				# simulation time step [s]
+t_f = 150				# simulation time end [s]
+
+# Calculated constants
+m_d = m_w - m_p		# “dry” mass of the rocket [kg]
+m = m_d + m_p*.5    # average rocket mass [kg]
+K = .5*c_D*A/m      # constant in the expression for acceleration due to drag
+a_T = T/m           # average acceleration due to thrust
+
+
+# ================================ Functions ================================ #
+
+
+def air_density(y):
+    """
+    Air density [kg/m^3]
+    as a function of altitude y [m]
+    """
+    return rho_0*np.exp(-y/H)
+
+
+def a_thrust(t):
+    """
+    Acceleration due to the rocket engine thrust [m/s^2]
+    as a function of time t [s]
+    """
+    return np.where(t < t_burn, a_T, 0)
+    # The above line allows our function to be used on entire numpy arrays at
+    # once, instead of being restricted to single values. It corresponds to the
+    # following if-else statement:
+    # if t < t_burn:
+    #     a = a_T
+    # else:
+    #     a = 0
+    # return a
+
+
+def a_drag(y, v):
+    """
+    Acceleration due to air resistance [m/s^2]
+    as a function of altitude y [m] and velocity v [m/s]
+    """
+    C = K * air_density(y) * np.sqrt(v**2)
+    return -C*v
+
+
+def a_gravity(t):
+    """
+    Acceleration due to gravity [m/s^2]
+    as a function of time t [s].
+    Note that we assume that the rocket starts at the ground, such that gravity
+    is counterbalanced by a normal force at t=0.
+    """
+    return np.where(t > 0, -g_0, 0)
+    # The above line allows our function to be used on entire numpy arrays at
+    # once, instead of being restricted to single values. It corresponds to the
+    # following if-else statement:
+    # if t > 0:
+    #     a = -g_0
+    # else:
+    #     a = 0
+    # return a
+
+
+def a_total(t, y, v):
+    """
+    Total acceleration [m/s^2]
+    as a function of time t [s], altitude y [m], and velocity v [m/s]
+    """
+    return a_thrust(t) + a_drag(y, v) + a_gravity(t)
+
+
+# ======================== Numerical implementation ========================= #
+
+# Calculate the number of data points in our simulation
+datapoints = int(np.ceil(t_f/dt))
+
+# Create data lists
+# Except for the time list, all lists are initialized as lists of zeros.
+t = np.arange(t_f, step=dt) # runs from 0 to t_f with step length dt
+y = np.zeros(datapoints)
+v = np.zeros(datapoints)
+
+
+# We will use while loops to iterate over our data lists. For this, we will
+# the auxillary variable i to keep track of which element we're looking at.
+# The data points are numbered from 0 to datapoints-1
+i = 0
+i_max = datapoints - 1
+
+
+# We iterate until the rocket has crashed, or until we reach the lists' end:
+while y[i] >= 0 and i < i_max:
+    # Position
+    y[i+1] = y[i]
+    
+    # Velocity
+    v[i+1] = v[i]
+    
+    # Advance i with 1
+    i += 1
+ 
+
+# When we exit the loop above, the rocket has crashed.
+# Since we don't need the data after i, we redefine our lists to only include
+# the points from 0 to i:
+t = t[:i]
+y = y[:i]
+v = v[:i]
+
+
+# ============================== Data analysis ============================== #
+
+# Maximal values
+apogee = np.max(y)
+
+
+
+# =========================== Printing of results =========================== #
+
+print('') # Prints a new line. Not necessary, but used to increase readability
+print('Apogee:\t', round(apogee), 'm')
+
+
+
+# =========================== Plotting of results =========================== #
+
+# Close all currently open figures, so we avoid mixing up old and new figures.
+plt.close('all')
+
+# Trajectory
+plt.figure()
+plt.plot(t, y)
+plt.xlabel("Time [s]")
+plt.ylabel("Altitude [m]")
+#plt.gca().set_aspect(1) # forces a 1:1 aspect ratio
+plt.grid(linestyle='--')
+plt.show()
