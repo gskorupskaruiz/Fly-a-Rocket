@@ -168,7 +168,6 @@ for t0 in times:
     ads.append(ad)
 
 plt.plot(t, v)
-plt.plot(t, y)
 plt.plot(times, accs)
 plt.plot(times, ads)
 plt.show()
