@@ -61,7 +61,8 @@ def a_drag(y, v):
     as a function of altitude y [m] and velocity v [m/s]
     """
     C = K * air_density(y) * np.sqrt(v**2)
-    return -C*v
+    D = - C * v
+    return D
 
 
 def a_gravity(t):
@@ -137,7 +138,7 @@ t = t[:i]
 y = y[:i]
 v = v[:i]
 
-print(dynamic_pressures)
+
 # ============================== Data analysis ============================== #
 # exercise a
 # Maximal values
@@ -149,10 +150,28 @@ t_total = 0
 for j in range(i):
     if -0.002 < v[j] < 0.002 and t[j] > 0:
         t_apogee = t[j]
+        print(t_apogee)
     if -1 < y[j] < 1 and t[j] > 0:
         t_total = t[j]
 
 max_velocity = max(v) #c
+
+times = np.linspace(0,150,1000)
+accs = []
+ads = []
+for t0 in times:
+    y1 = y[int(t0*i/1000)]
+    v1 = v[int(t0*i/1000)]
+    aa = a_total(t0, y1, v1)
+    ad = a_drag(y1, v1)
+    accs.append(aa)
+    ads.append(ad)
+
+plt.plot(t, v)
+plt.plot(t, y)
+plt.plot(times, accs)
+plt.plot(times, ads)
+plt.show()
 
 #exercise d
 max_q = max(dynamic_pressures)
