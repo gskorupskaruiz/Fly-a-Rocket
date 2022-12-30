@@ -24,8 +24,7 @@ t_f = 150				# simulation time end [s]
 # Calculated constants
 m_d = m_w - m_p		# “dry” mass of the rocket [kg]
 m = m_d + m_p*.5    # average rocket mass [kg]
-K1 = .5*c_D*A/m      # constant in the expression for acceleration due to drag
-K2 = .5*c_D*A/m_d
+K = .5*c_D*A/m      # constant in the expression for acceleration due to drag
 a_T = T/m           # average acceleration due to thrust
 
 
@@ -56,16 +55,12 @@ def a_thrust(t):
     # return a
 
 
-def a_drag(t, y, v):
+def a_drag(y, v):
     """
     Acceleration due to air resistance [m/s^2]
     as a function of altitude y [m] and velocity v [m/s]
     """
-    if t>t_burn:
-        C = 3.53 * 10**(-3) * v/m_d
-    else:
-        C = 3.53 * 10**(-3) * v/m
-
+    C = K * air_density(y) * np.sqrt(v**2)
     return -C*v
 
 
@@ -76,7 +71,7 @@ def a_gravity(t):
     Note that we assume that the rocket starts at the ground, such that gravity
     is counterbalanced by a normal force at t=0.
     """
-    return np.where(t >= 0, -g_0, 0)
+    return np.where(t > 0, -g_0, 0)
     # The above line allows our function to be used on entire numpy arrays at
     # once, instead of being restricted to single values. It corresponds to the
     # following if-else statement:
@@ -92,8 +87,7 @@ def a_total(t, y, v):
     Total acceleration [m/s^2]
     as a function of time t [s], altitude y [m], and velocity v [m/s]
     """
-
-    return a_thrust(t) + a_drag(t, y, v) + a_gravity(t)
+    return a_thrust(t) + a_drag(y, v) + a_gravity(t)
 
 def q(y, v):
     q = 0.5 * air_density(y) * v **2
@@ -122,10 +116,10 @@ i_max = datapoints - 1
 while y[i] >= 0 and i < i_max:
     # Position
     y[i+1] = y[i] + v[i] * dt
-    
+
     # Velocity
     v[i+1] = v[i] + a_total(t[i], y[i], v[i]) * dt
-    
+
     # Advance i with 1
     i += 1
 
@@ -143,7 +137,6 @@ t = t[:i]
 y = y[:i]
 v = v[:i]
 
-
 # ============================== Data analysis ============================== #
 # exercise a
 # Maximal values
@@ -153,29 +146,12 @@ h_burnout = y[int(t_burn/dt)]
 t_apogee = 0
 t_total = 0
 for j in range(i):
-    if -0.005 < v[j] < 0.005 and t[j] > 0:
+    if -0.002 < v[j] < 0.002 and t[j] > 0:
         t_apogee = t[j]
-        print(t_apogee)
     if -1 < y[j] < 1 and t[j] > 0:
         t_total = t[j]
 
 max_velocity = max(v) #c
-
-times = np.linspace(0,150,1000)
-accs = []
-ads = []
-for t0 in times:
-    y1 = y[int(t0*i/1000)]
-    v1 = v[int(t0*i/1000)]
-    aa = a_total(t0, y1, v1)
-    ad = a_drag(t0, y1, v1)
-    accs.append(aa)
-    ads.append(ad)
-
-#plt.plot(t, v)
-plt.plot(times, accs)
-plt.plot(times, ads)
-plt.show()
 
 #exercise d
 max_q = max(dynamic_pressures)
@@ -190,7 +166,7 @@ for q1 in dynamic_pressures:
 # =========================== Printing of results =========================== #
 
 #exercise a
-
+print(air_density(11000))
 print('') # Prints a new line. Not necessary, but used to increase readability
 print('Apogee: ', round(apogee), 'm')
 print('Burnout velocity: ', round(v_burnout,2), 'm/s')
