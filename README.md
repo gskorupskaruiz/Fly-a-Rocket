@@ -5,4 +5,4 @@ For Problem 3, the following files were added:
     - Rocket programme.py - this is the version of the programme rewritten for convergence with results from problem 2  
     - PROBLEM 3.docx - this is my solution to Problem 3; it includes the explanation of some of the steps I took in the calculations  
     - Rocket_trajectory_FaRc3.py.txt - this the original file received from FaR  
-
+    - Rocket programme with angle.py = the first version (3.a) corrected for a launch angle of 75 degrees (probably incorrect)
